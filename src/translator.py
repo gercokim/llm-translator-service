@@ -1,34 +1,35 @@
+from google.cloud import aiplatform
+import subprocess
+from vertexai.preview.language_models import ChatModel, InputOutputTextPair
+
+
+PROJECT_ID = "nodebb-417100"
+subprocess.run(['gcloud', 'config', 'set', 'project', PROJECT_ID,])
+
+aiplatform.init(
+    project=PROJECT_ID,
+    location='us-central1'
+)
+
 def translate_content(content: str) -> tuple[bool, str]:
-    if content == "这是一条中文消息":
-        return False, "This is a Chinese message"
-    if content == "Ceci est un message en français":
-        return False, "This is a French message"
-    if content == "Esta es un mensaje en español":
-        return False, "This is a Spanish message"
-    if content == "Esta é uma mensagem em português":
-        return False, "This is a Portuguese message"
-    if content  == "これは日本語のメッセージです":
-        return False, "This is a Japanese message"
-    if content == "이것은 한국어 메시지입니다":
-        return False, "This is a Korean message"
-    if content == "Dies ist eine Nachricht auf Deutsch":
-        return False, "This is a German message"
-    if content == "Questo è un messaggio in italiano":
-        return False, "This is an Italian message"
-    if content == "Это сообщение на русском":
-        return False, "This is a Russian message"
-    if content == "هذه رسالة باللغة العربية":
-        return False, "This is an Arabic message"
-    if content == "यह हिंदी में संदेश है":
-        return False, "This is a Hindi message"
-    if content == "นี่คือข้อความภาษาไทย":
-        return False, "This is a Thai message"
-    if content == "Bu bir Türkçe mesajdır":
-        return False, "This is a Turkish message"
-    if content == "Đây là một tin nhắn bằng tiếng Việt":
-        return False, "This is a Vietnamese message"
-    if content == "Esto es un mensaje en catalán":
-        return False, "This is a Catalan message"
-    if content == "This is an English message":
-        return True, "This is an English message"
-    return True, content
+    context1 = "You are an English translator that translates text to English. Ensure that every response is only in English. Reply with an empty string if given unintelligible text"
+    context2 = "You reply with true if the given text is made up of valid English words, false otherwise."
+    parameters = {
+            "temperature": 0.7,  # Temperature controls the degree of randomness in token selection.
+            "max_output_tokens": 256,  # Token limit determines the maximum amount of text output.
+        }
+    try:
+        chat_model = ChatModel.from_pretrained("chat-bison@001")
+        chat = chat_model.start_chat(context=context1)
+        response1 = chat.send_message(content, **parameters)
+        chat = chat_model.start_chat(context=context2)
+        response2 = chat.send_message(content, **parameters)
+        b1 = "true" in response2.text or "True" in response2.text
+        b2 = "false" in response2.text or "False" in response2.text
+        if not b1 and not b2:
+            return (b1, "I was unable to answer your request")
+        return (b1, response1.text)
+    except Exception as e:
+        return (False, "I was unable to answer your request")
+
+print(translate_content('Aquí está su primer ejemplo.'))
