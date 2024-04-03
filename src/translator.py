@@ -4,7 +4,7 @@ from vertexai.preview.language_models import ChatModel, InputOutputTextPair
 
 
 PROJECT_ID = "nodebb-417100"
-subprocess.run(['gcloud', 'config', 'set', 'project', PROJECT_ID,])
+#subprocess.run(['gcloud', 'config', 'set', 'project', PROJECT_ID,])
 
 aiplatform.init(
     project=PROJECT_ID,
